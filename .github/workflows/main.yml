@@ -1,0 +1,43 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Test Jupyter Notebooks
+        run: |
+          if [ -d notebooks ]; then
+            pip install nbval
+            pytest --nbval notebooks/
+          else
+            echo "No notebooks directory found, skipping notebook tests."
+          fi
+
+      - name: Validate HTML files
+        run: |
+          if command -v tidy; then
+            find . -name "*.html" | xargs tidy -errors
+          else
+            echo "tidy not found, skipping HTML validation."
+          fi
